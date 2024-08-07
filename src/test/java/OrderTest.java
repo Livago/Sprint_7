@@ -35,7 +35,6 @@ public class OrderTest {
         orderClient = new OrderClient();
     }
 
-
     @Test
     @DisplayName("Создание заказа самоката с разным цветом")
     @Description("Проверка создания заказа самоката с разным цветом")

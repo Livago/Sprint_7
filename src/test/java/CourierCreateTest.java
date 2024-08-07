@@ -4,6 +4,7 @@ import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,11 +17,10 @@ import static org.hamcrest.CoreMatchers.equalTo;
 
 public class CourierCreateTest {
     private static CourierBody courierBody;
-    String login = RandomStringUtils.random(7);
-    String password = RandomStringUtils.random(7);
-    String firstname = RandomStringUtils.random(7);
-    static List<ValidatableResponse> couriersData = new ArrayList<>();
-
+    private String login = RandomStringUtils.random(7);
+    private String password = RandomStringUtils.random(7);
+    private String firstname = RandomStringUtils.random(7);
+    private static List<ValidatableResponse> couriersData = new ArrayList<>();
 
     @Before
     public void setUp() {
@@ -32,23 +32,21 @@ public class CourierCreateTest {
     @Description("Создание курьера с валидным телом запроса")
     public void canCreateCourier() {
         ValidatableResponse response = courierBody.create(login, password, firstname);
-        response.assertThat().statusCode(SC_CREATED).and().body("ok", equalTo(true));
         courierBody.getId(login, password);
         couriersData.add(response);
+        response.assertThat().statusCode(SC_CREATED).and().body("ok", equalTo(true));
     }
 
     @Test
     @DisplayName("Проверка невозможности создания двух одинаковых курьеров")
     @Description("Проверка невозможности создания двух курьеров с одинаковым login")
     public void duplicateCourier() {
-        ValidatableResponse responsea = courierBody.create("logina", "passworda", "firstname");
-        ValidatableResponse responseb = courierBody.create("logina", "passworda", "firstname")
+        ValidatableResponse responseA = courierBody.create("logina", "passworda", "firstname");
+        couriersData.add(responseA);
+        ValidatableResponse responseB = courierBody.create("logina", "passworda", "firstname")
                 .statusCode(SC_CONFLICT)
                 .and()
                 .body("message", equalTo("Этот логин уже используется. Попробуйте другой."));
-        courierBody.getId("logina", "passworda");
-        courierBody.delete(responsea);
-
     }
 
     @Test
@@ -79,13 +77,10 @@ public class CourierCreateTest {
                 .statusCode(SC_CREATED)
                 .and()
                 .body("ok", equalTo(true));
-        courierBody.getId(login, password);
-        couriersData.add(response);
     }
 
-    @AfterClass
-    public static void tearDown() {
-
+    @After
+    public void tearDown() {
         for (ValidatableResponse response : couriersData) {
             courierBody.delete(response);
         }

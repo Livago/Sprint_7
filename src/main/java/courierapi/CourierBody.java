@@ -28,7 +28,6 @@ public class CourierBody {
     }
 
     public ValidatableResponse delete(ValidatableResponse response) {
-
         return courierClient.deleteCourier().then();
     }
 

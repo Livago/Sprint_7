@@ -4,6 +4,7 @@ import io.qameta.allure.Description;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,10 +18,10 @@ import static org.hamcrest.Matchers.notNullValue;
 
 public class LoginTest {
     private static CourierBody courierBody;
-    String login = RandomStringUtils.random(7);
-    String password = RandomStringUtils.random(7);
-    String firstname = RandomStringUtils.random(7);
-    static List<ValidatableResponse> couriersData = new ArrayList<>();
+    private String login = RandomStringUtils.random(7);
+    private String password = RandomStringUtils.random(7);
+    private String firstname = RandomStringUtils.random(7);
+    private static List<ValidatableResponse> couriersData = new ArrayList<>();
     @Before
     public void setUp() {
         courierBody = new CourierBody(new CourierClient());
@@ -30,13 +31,12 @@ public class LoginTest {
     @Description("Проверки возможности авторизаваться курьером при введении валидных данных")
     public void canLoginCourier(){
         ValidatableResponse response = courierBody.create(login, password, firstname);
+        courierBody.getId(login, password);
+        couriersData.add(response);
         courierBody.login(login, password)
                 .statusCode(SC_OK)
                 .and()
                 .body("id", notNullValue());
-        courierBody.getId(login, password);
-        couriersData.add(response);
-        courierBody.delete(response);
     }
     @Test
     @DisplayName("Авторизация без логина")
@@ -66,5 +66,11 @@ public class LoginTest {
                 .and()
                 .body("message", equalTo("Учетная запись не найдена"));
     }
-
+    @After
+    public void tearDown() {
+        for (ValidatableResponse response : couriersData) {
+            courierBody.delete(response);
+        }
+        couriersData.clear();
+    }
 }
